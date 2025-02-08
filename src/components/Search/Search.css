@@ -1,0 +1,29 @@
+
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Adds space between input and button */
+    margin : 0 auto;
+}
+
+#pokemon-name-search {
+    margin-top: 2rem;
+    width: 600px;
+    margin: 2rem;
+    padding: 1.5rem;
+
+}
+
+.search-button {
+    padding: 8px 15px;
+    font-size: 16px;
+    background-color: #ffcc00;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.search-button:hover {
+    background-color: #ffaa00;
+}
