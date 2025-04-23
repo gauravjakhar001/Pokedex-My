@@ -1,83 +1,55 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-function usePokemonList(url,type){
-    console.log("B")
+function usePokemonList(url, type) {
     const [pokemonListState, setPokemonListState] = useState({
-        pokemonList : [],
-        isLoading :true ,
+        pokemonList: [],
+        isLoading: true,
         pokedexUrl: url,
-        nextUrl : '',
+        nextUrl: '',
         prevUrl: ''
     });
 
-    async function downloadPokemon (){
-        // setIsLoading(true);
- 
-        setPokemonListState({...pokemonListState, isLoading : true});
- 
-         const response =  await axios.get(pokemonListState.pokedexUrl);  // This downloades the list of the 20 pokemons 
- 
-         const pokemonResults = response.data.results; // We get the array of the pokemons from the result
- 
-         console.log("response is ",response.data.pokemon);
-         console.log(pokemonListState);
+    async function downloadPokemon() {
+        setPokemonListState({ ...pokemonListState, isLoading: true });
 
-         setPokemonListState((state)=>({
-             ...state,
-             nextUrl : response.data.next,
-             prevUrl : response.data.previous ,
-             
- }));
-         
- 
-         // Iterating over the array of pokemons ,and using their url, to create an array of promises
-         // that will download those 20 pokemons 
+        try {
+            const response = await axios.get(pokemonListState.pokedexUrl);
+            const pokemonResults = response.data.results;
 
-         if(type){
+            // Fetch details for each Pokemon
+            const pokemonDetails = await Promise.all(
+                pokemonResults.map(async (pokemon) => {
+                    const detailsResponse = await axios.get(pokemon.url);
+                    return {
+                        name: detailsResponse.data.name,
+                        image: detailsResponse.data.sprites.other.dream_world.front_default,
+                        id: detailsResponse.data.id
+                    };
+                })
+            );
 
-            setPokemonListState((state) =>({
-                ...state ,
-                pokemonList: response.data.pokemon.slice(0,5)
-            }))
-
-         }else{
-
-         const pokemonResultPromise =  pokemonResults.map((pokemon) => axios.get(pokemon.url));
- 
-         //Passing that promise array to axios.all
- 
-         const pokemonData = await axios.all(pokemonResultPromise);// Array of 20 pokemons detailed data 
-         console.log(pokemonData);
- 
-         // now iterate on the data of each pokemon, and extract id,name , image, types 
-         const pokemonListResult =pokemonData.map((pokeData) =>{
-             const pokemon  = pokeData.data;
- 
-             return { 
-                     id : pokemon.id,
-                     name : pokemon.name  ,
-                     image : (pokemon .sprites.other)? pokemon.sprites.other.dream_world.front_default: pokemon.sprites.front_shiny,
-                     types: pokemon.types
-                 }
- 
-         });
-         console.log(pokemonListResult);
- 
-         setPokemonListState( (state) =>({ 
-             ...state,
-              pokemonList : pokemonListResult ,
-             isLoading : false
+            setPokemonListState((state) => ({
+                ...state,
+                nextUrl: response.data.next,
+                prevUrl: response.data.previous,
+                pokemonList: pokemonDetails,
+                isLoading: false
+            }));
+        } catch (error) {
+            console.error("Error fetching Pokemon:", error);
+            setPokemonListState((state) => ({
+                ...state,
+                isLoading: false
             }));
         }
     }
 
-     useEffect(() => {
+    useEffect(() => {
         downloadPokemon();
-     },[pokemonListState.pokedexUrl])
+    }, [pokemonListState.pokedexUrl]);
 
-     return {pokemonListState , setPokemonListState}
+    return [pokemonListState, setPokemonListState];
 }
-
 
 export default usePokemonList;

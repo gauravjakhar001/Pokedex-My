@@ -1,58 +1,116 @@
 import axios from "axios";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import './PokemonDetails.css';
-import usePokemonList from "../../hooks/usePokemonList";
+import { Link } from "react-router-dom";
 
+function PokemonDetails() {
+    const { id } = useParams();
+    const [pokemon, setPokemon] = useState({});
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [similarPokemon, setSimilarPokemon] = useState([]);
 
-function PokemonDetails(){
-    console.log("c");
-    const {id} = useParams();
-    const [pokemon , setPokemon] = useState({});
+    async function downloadPokemon() {
+        try {
+            setIsLoading(true);
+            setError(null);
+            
+            // Fetch main Pokemon details
+            const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${id}`);
+            const pokemonData = response.data;
+            
+            setPokemon({
+                name: pokemonData.name,
+                image: pokemonData.sprites.other.dream_world.front_default || pokemonData.sprites.front_default,
+                weight: pokemonData.weight,
+                height: pokemonData.height,
+                types: pokemonData.types.map((t) => t.type.name)
+            });
 
-    async function downloadPokemon(){
-    const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${id}`);
-    setPokemon({
-        name :response.data.name,
-        image: response.data.sprites.other.dream_world.front_default,
-        weight :response.data.weight,
-        height: response.data.height,
-        types : response.data.types.map((t)=> t.type.name)
-    })
-}
-    const {pokemonListState } = usePokemonList('https://pokeapi.co/api/v2/type/fire',false);
+            // Fetch similar Pokemon based on the first type
+            if (pokemonData.types.length > 0) {
+                const typeResponse = await axios.get(`https://pokeapi.co/api/v2/type/${pokemonData.types[0].type.name}`);
+                setSimilarPokemon(typeResponse.data.pokemon.slice(0, 5));
+            }
+        } catch (err) {
+            setError("Failed to fetch Pokemon details");
+            console.error("Error fetching Pokemon:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
-   
-    useEffect(()=>{
+    useEffect(() => {
         downloadPokemon();
-        console.log("list",pokemonListState);
-    },[id]);
-    console.log("a", pokemonListState.pokemonList)
-    return(
+    }, [id]);
+
+    if (isLoading) {
+        return <div className="loading">Loading Pokemon details...</div>;
+    }
+
+    if (error) {
+        return <div className="error">{error}</div>;
+    }
+
+    return (
         <div className="pokemon-details-wrapper">
-
-        <img className="pokemon-details-image" src = {pokemon.image} />
-        <div className="pokemon-details-name"> <span> {pokemon.name}</span>  </div>
-        
-        <div  className="pokemon-details-name"> Height: {pokemon.height} </div>
-        <div  className="pokemon-details-name"> Weight: {pokemon.weight} </div>
-
-        <div className="pokemon-details-types">
-
-        {pokemon && pokemon.types && pokemon.types.map((t) => ( <div key={t}>{t}</div>))}
+            <div className="pokemon-details-header">
+                <Link to="/" className="back-button">← Back to Pokedex</Link>
             </div>
 
-            <div>
-                More Fire types Pokemons
-                <ul>
-                    {pokemonListState.pokemonList && pokemonListState.pokemonList.map((p)=> <li key = {p.pokemon.url}> { p.pokemon.name }</li>)}
-                </ul>
+            <div className="pokemon-details-content">
+                <img 
+                    className="pokemon-details-image" 
+                    src={pokemon.image} 
+                    alt={pokemon.name}
+                />
+                
+                <div className="pokemon-details-info">
+                    <h1 className="pokemon-details-name">
+                        {pokemon.name}
+                    </h1>
+                    
+                    <div className="pokemon-details-stats">
+                        <div className="stat">
+                            <span className="stat-label">Height:</span>
+                            <span className="stat-value">{pokemon.height / 10}m</span>
+                        </div>
+                        <div className="stat">
+                            <span className="stat-label">Weight:</span>
+                            <span className="stat-value">{pokemon.weight / 10}kg</span>
+                        </div>
+                    </div>
+
+                    <div className="pokemon-details-types">
+                        <h3>Types:</h3>
+                        <div className="types-list">
+                            {pokemon.types.map((type) => (
+                                <span key={type} className="type-badge">{type}</span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            {similarPokemon.length > 0 && (
+                <div className="similar-pokemon">
+                    <h3>Similar Pokemon:</h3>
+                    <div className="similar-pokemon-list">
+                        {similarPokemon.map((p) => (
+                            <Link 
+                                key={p.pokemon.name} 
+                                to={`/pokemon/${p.pokemon.url.split('/').slice(-2, -1)[0]}`}
+                                className="similar-pokemon-item"
+                            >
+                                {p.pokemon.name}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
-
     );
 }
 
-
-export default PokemonDetails ;
+export default PokemonDetails;

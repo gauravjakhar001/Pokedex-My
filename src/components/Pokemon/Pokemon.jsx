@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+
 import './Pokemon.css'
 
 function Pokemon({name ,image,id}){

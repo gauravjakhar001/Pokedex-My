@@ -5,11 +5,10 @@ import usePokemonList from "../../hooks/usePokemonList";
 import Search from "../Search/Search";
 
 function PokemonList() {
-    const { pokemonListState, setPokemonListState } = usePokemonList("https://pokeapi.co/api/v2/pokemon?offset=20&limit=20");
+    const [pokemonListState, setPokemonListState] = usePokemonList("https://pokeapi.co/api/v2/pokemon?offset=0&limit=20");
     const [searchTerm, setSearchTerm] = useState("");
     const [filteredPokemon, setFilteredPokemon] = useState([]);
 
-    // Update the displayed Pokémon when the search term changes
     useEffect(() => {
         if (searchTerm === "") {
             setFilteredPokemon(pokemonListState.pokemonList);
@@ -23,33 +22,45 @@ function PokemonList() {
 
     return (
         <div className="pokemon-list-wrapper">
-            {/* Search Component */}
             <Search onSearch={setSearchTerm} />
-
+            
             <div className="pokemon-wrapper">
-                {pokemonListState.isLoading
-                    ? "Loading...."
-                    : filteredPokemon.map((p) => (
-                          <Pokemon name={p.name} image={p.image} key={p.id} id={p.id} />
-                      ))}
+                {pokemonListState.isLoading ? (
+                    <div className="loading">Loading...</div>
+                ) : filteredPokemon.length === 0 ? (
+                    <div className="no-results">No Pokémon found</div>
+                ) : (
+                    filteredPokemon.map((p) => (
+                        <Pokemon 
+                            key={p.id} 
+                            name={p.name} 
+                            image={p.image} 
+                            id={p.id} 
+                        />
+                    ))
+                )}
             </div>
 
             <div className="controls">
                 <button
-                    disabled={pokemonListState.prevUrl == null}
+                    disabled={!pokemonListState.prevUrl}
                     onClick={() => {
-                        const urlToSet = pokemonListState.prevUrl;
-                        setPokemonListState({ ...pokemonListState, pokedexUrl: urlToSet });
+                        setPokemonListState((state) => ({ 
+                            ...state, 
+                            pokedexUrl: pokemonListState.prevUrl 
+                        }));
                     }}
                 >
                     Prev
                 </button>
 
                 <button
-                    disabled={pokemonListState.nextUrl == null}
+                    disabled={!pokemonListState.nextUrl}
                     onClick={() => {
-                        const urlToSet = pokemonListState.nextUrl;
-                        setPokemonListState((state) => ({ ...pokemonListState, pokedexUrl: urlToSet }));
+                        setPokemonListState((state) => ({ 
+                            ...state, 
+                            pokedexUrl: pokemonListState.nextUrl 
+                        }));
                     }}
                 >
                     Next
