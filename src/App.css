@@ -1,15 +1,54 @@
-.outer-pokedex{
-    display: flex;
-    flex-direction: column; 
-    align-items: center;
+.app-container {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    padding: 20px;
 }
 
-
-#pokedex-heading{
-    letter-spacing: 5px;
+.outer-pokedex {
+    max-width: 1200px;
     margin: 0 auto;
-  
-} 
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+#pokedex-heading {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 3rem;
+    color: #2c3e50;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#pokedex-heading a {
+    text-decoration: none;
+    color: #2c3e50;
+    transition: color 0.3s ease;
+}
+
+#pokedex-heading a:hover {
+    color: #3498db;
+}
+
+/* Add a subtle animation to the heading */
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+#pokedex-heading {
+    animation: float 3s ease-in-out infinite;
+}
 
 a:visited{
     color: black;
